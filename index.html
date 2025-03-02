@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Calculadora de p-valor</title>
+  <!-- Incluimos Bulma desde CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+</head>
+<body>
+  <!-- Header con navbar -->
+  <nav class="navbar is-dark" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="#">
+        <strong>Calculadora de p-valor</strong>
+      </a>
+      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarMenu">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+    <div id="navbarMenu" class="navbar-menu">
+      <div class="navbar-start">
+        <a class="navbar-item" href="#">
+          Inicio
+        </a>
+        <a class="navbar-item" href="#info">
+          Información
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero section -->
+  <section class="hero is-primary">
+    <div class="hero-body">
+      <div class="container">
+        <h1 class="title">
+          Calculadora de p-valor
+        </h1>
+        <h2 class="subtitle">
+          Calcula el p-valor a partir del coeficiente de correlación y el número de observaciones.
+        </h2>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sección principal: Calculadora -->
+  <section class="section">
+    <div class="container">
+      <div class="box">
+        <div class="field">
+          <label class="label">Coeficiente de correlación (r)</label>
+          <div class="control">
+            <input id="rValue" class="input" type="number" step="any" placeholder="Ejemplo: 0.999">
+          </div>
+          <p class="help">Ingresa un valor entre -1 y 1 (valor absoluto menor que 1).</p>
+        </div>
+
+        <div class="field">
+          <label class="label">Número de observaciones (n)</label>
+          <div class="control">
+            <input id="nValue" class="input" type="number" placeholder="Ejemplo: 50">
+          </div>
+          <p class="help">Debe ser al menos 3 para poder calcular el estadístico t.</p>
+        </div>
+
+        <div class="field">
+          <div class="control">
+            <button id="calculateBtn" class="button is-link">Calcular p-valor</button>
+          </div>
+        </div>
+
+        <div class="notification is-info" id="resultNotification" style="display: none;">
+          <strong>p-valor:</strong> <span id="result"></span>
+        </div>
+        
+        <!-- Mensaje explicativo para p-valores extremadamente bajos -->
+        <div class="notification is-warning" id="explanationNotification" style="display: none;">
+          El p-valor es tan pequeño que se considera prácticamente 0. Esto indica que la probabilidad de obtener esta correlación por azar es casi nula y se rechaza la hipótesis nula.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sección de información adicional -->
+  <section class="section" id="info">
+    <div class="container">
+      <h2 class="title is-4">¿Cómo se calcula el p-valor?</h2>
+      <p>
+        Esta calculadora utiliza la librería <strong>jStat</strong> para calcular el p-valor basado en la distribución t de Student. El proceso es el siguiente:
+      </p>
+      <ul>
+        <li>
+          Primero, se calcula el estadístico t usando la fórmula:
+          <code>t = r * sqrt((n-2) / (1 - r²))</code>
+        </li>
+        <li>
+          Con los grados de libertad <code>n - 2</code>, se obtiene la probabilidad acumulada de la distribución t utilizando <code>jStat.studentt.cdf</code>.
+        </li>
+        <li>
+          Finalmente, se multiplica por 2 para obtener el p-valor en una prueba de dos colas.
+        </li>
+      </ul>
+      <p>
+        Un p-valor muy pequeño indica que es extremadamente improbable obtener la correlación observada si no existiera una relación real (hipótesis nula). Esto significa que la correlación es estadísticamente significativa.
+      </p>
+      <p>
+        La tecnología detrás de esta calculadora es JavaScript, empleando jStat para los cálculos estadísticos y Bulma para el diseño web.
+      </p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="content has-text-centered">
+      <p>
+        Calculadora de p-valor. Desarrollado usando <a href="https://jstat.github.io/">jStat</a> y <a href="https://bulma.io/">Bulma</a>.
+      </p>
+    </div>
+  </footer>
+
+  <!-- Incluimos la librería jStat -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.4/jstat.min.js"></script>
+  <script>
+    // Botón de cálculo y eventos
+    document.getElementById('calculateBtn').addEventListener('click', function() {
+      // Ocultar mensajes previos
+      document.getElementById('resultNotification').style.display = 'none';
+      document.getElementById('explanationNotification').style.display = 'none';
+      
+      // Obtener valores de entrada
+      var r = parseFloat(document.getElementById('rValue').value);
+      var n = parseInt(document.getElementById('nValue').value);
+      
+      // Validación de datos
+      if(isNaN(r) || isNaN(n) || n < 3 || Math.abs(r) >= 1) {
+        alert("Por favor, ingresa un coeficiente r válido (valor absoluto menor que 1) y un número n mayor o igual a 3.");
+        return;
+      }
+      
+      // Calcular el estadístico t: t = r * sqrt((n-2)/(1 - r^2))
+      var t = r * Math.sqrt((n - 2) / (1 - r * r));
+      var gradosLibertad = n - 2;
+      
+      // Calcular el p-valor para una prueba de dos colas
+      var pValue = 2 * (1 - jStat.studentt.cdf(Math.abs(t), gradosLibertad));
+      
+      // Mostrar el resultado con notación exponencial
+      document.getElementById('result').textContent = pValue.toExponential(4);
+      document.getElementById('resultNotification').style.display = 'block';
+      
+      // Mostrar mensaje explicativo si el p-valor es extremadamente bajo
+      if(pValue < 1e-4) {
+        document.getElementById('explanationNotification').style.display = 'block';
+      }
+    });
+
+    // Toggle para el menú burger (para móviles) en Bulma
+    document.addEventListener('DOMContentLoaded', () => {
+      const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+      if ($navbarBurgers.length > 0) {
+        $navbarBurgers.forEach( el => {
+          el.addEventListener('click', () => {
+            const target = el.dataset.target;
+            const $target = document.getElementById(target);
+            el.classList.toggle('is-active');
+            $target.classList.toggle('is-active');
+          });
+        });
+      }
+    });
+  </script>
+</body>
+</html>
+
