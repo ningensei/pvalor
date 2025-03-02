@@ -49,6 +49,7 @@
   <section class="section">
     <div class="container">
       <div class="box">
+        <!-- Input para coeficiente de correlación -->
         <div class="field">
           <label class="label">Coeficiente de correlación (r)</label>
           <div class="control">
@@ -57,6 +58,7 @@
           <p class="help">Ingresa un valor entre -1 y 1 (valor absoluto menor que 1).</p>
         </div>
 
+        <!-- Input para número de observaciones -->
         <div class="field">
           <label class="label">Número de observaciones (n)</label>
           <div class="control">
@@ -64,18 +66,33 @@
           </div>
           <p class="help">Debe ser al menos 3 para poder calcular el estadístico t.</p>
         </div>
+        
+        <!-- Input para elegir el formato del resultado -->
+        <div class="field">
+          <label class="label">Formato del resultado</label>
+          <div class="control">
+            <div class="select">
+              <select id="formatSelect">
+                <option value="fixed">Fijo (0.3910)</option>
+                <option value="exponential">Exponencial (3.9100e-1)</option>
+              </select>
+            </div>
+          </div>
+        </div>
 
+        <!-- Botón para calcular -->
         <div class="field">
           <div class="control">
             <button id="calculateBtn" class="button is-link">Calcular p-valor</button>
           </div>
         </div>
 
+        <!-- Notificación para el resultado -->
         <div class="notification is-info" id="resultNotification" style="display: none;">
           <strong>p-valor:</strong> <span id="result"></span>
         </div>
         
-        <!-- Mensaje explicativo para p-valores extremadamente bajos -->
+        <!-- Notificación para p-valor extremadamente bajo -->
         <div class="notification is-warning" id="explanationNotification" style="display: none;">
           El p-valor es tan pequeño que se considera prácticamente 0. Esto indica que la probabilidad de obtener esta correlación por azar es casi nula y se rechaza la hipótesis nula.
         </div>
@@ -123,7 +140,7 @@
   <!-- Incluimos la librería jStat -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.4/jstat.min.js"></script>
   <script>
-    // Botón de cálculo y eventos
+    // Evento del botón de cálculo
     document.getElementById('calculateBtn').addEventListener('click', function() {
       // Ocultar mensajes previos
       document.getElementById('resultNotification').style.display = 'none';
@@ -132,6 +149,7 @@
       // Obtener valores de entrada
       var r = parseFloat(document.getElementById('rValue').value);
       var n = parseInt(document.getElementById('nValue').value);
+      var format = document.getElementById('formatSelect').value;
       
       // Validación de datos
       if(isNaN(r) || isNaN(n) || n < 3 || Math.abs(r) >= 1) {
@@ -146,8 +164,15 @@
       // Calcular el p-valor para una prueba de dos colas
       var pValue = 2 * (1 - jStat.studentt.cdf(Math.abs(t), gradosLibertad));
       
-      // Mostrar el resultado con notación exponencial
-      document.getElementById('result').textContent = pValue.toFixed(4);
+      // Mostrar el resultado según el formato seleccionado
+      var resultText = "";
+      if (format === "fixed") {
+        resultText = pValue.toFixed(4);
+      } else {
+        resultText = pValue.toExponential(4);
+      }
+      
+      document.getElementById('result').textContent = resultText;
       document.getElementById('resultNotification').style.display = 'block';
       
       // Mostrar mensaje explicativo si el p-valor es extremadamente bajo
@@ -173,4 +198,3 @@
   </script>
 </body>
 </html>
-
