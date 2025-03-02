@@ -147,7 +147,7 @@
       var pValue = 2 * (1 - jStat.studentt.cdf(Math.abs(t), gradosLibertad));
       
       // Mostrar el resultado con notación exponencial
-      document.getElementById('result').textContent = pValue.toExponential(4);
+      document.getElementById('result').textContent = pValue.toFixed(4);
       document.getElementById('resultNotification').style.display = 'block';
       
       // Mostrar mensaje explicativo si el p-valor es extremadamente bajo
